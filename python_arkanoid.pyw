@@ -209,7 +209,7 @@ while ON:
 	
 	rect_bola_prox_mov = pygame.Rect(rect_bola.x+VELOCIDADE_BOLA_X,rect_bola.y+VELOCIDADE_BOLA_Y,LADO_BOLA,LADO_BOLA)
 	
-	if rect_bola_prox_mov.collidelistall(lista_bloques):
+	if rect_bola_prox_mov.collidelistall(lista_bloques) and not pelota_pegada:
 		lista_colisions = rect_bola_prox_mov.collidelistall(lista_bloques)
 		ubicacion_rest = 0
 		score = score + (len(lista_colisions) * 10)
