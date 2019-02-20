@@ -5,49 +5,56 @@ import pygame.gfxdraw
 from pygame.locals import *
 import math
 
-ANCHO_VENTANA = 500
-ALTO_VENTANA = 400
-
-ANCHO_PALETA = ANCHO_VENTANA / 10
-ALTO_PALETA = ANCHO_PALETA / 5
-
-LADO_BOLA = ALTO_PALETA
-
-RADIO_CIRCULO = ALTO_PALETA/2
-
-ANCHO_PALETA_TOTAL = ANCHO_PALETA + RADIO_CIRCULO*2
-
-MARCO = 5
-
-ANCHO_BLOQUE = (ANCHO_VENTANA-MARCO*2) / 10
-ALTO_BLOQUE = ALTO_PALETA * 1.3
-
-VELOCIDADE_PALETA = 6
-
-VELOCIDADE_BOLA_TOTAL = 6
-VELOCIDADE_MAX_BOLA_X = 5
-VELOCIDADE_BOLA_X = 0
-VELOCIDADE_BOLA_Y = -VELOCIDADE_BOLA_TOTAL
-
-#DESPOIS DE UN CHOQUE COA PALETA CALCULAR DIRECCION.
-
-def calc_vel_bola_x():
-	VEL_Y = VELOCIDADE_BOLA_Y
-	choque_altura = (punto_bola.x+LADO_BOLA) - punto_paleta.x
-	VEL_X = (((choque_altura * 100)/ANCHO_PALETA_TOTAL) * 0.1) - VELOCIDADE_MAX_BOLA_X
-	VEL_X = max(-VELOCIDADE_MAX_BOLA_X, VEL_X)
-	VEL_X = min(VELOCIDADE_MAX_BOLA_X, VEL_X)
-	return VEL_X
-
-#CALCULAR VELOCIDADE_BOLA_Y EN FUNCION DA VELOCIDADE EN X.
-	
-def calc_vel_bola_y():
-	return VELOCIDADE_BOLA_TOTAL * (math.sin(math.radians(90 - math.degrees(math.asin(VELOCIDADE_BOLA_X/float(VELOCIDADE_BOLA_TOTAL))))))
-
-class punto:
+class Punto:
 	def __init__(self,x,y):
 		self.x = x
 		self.y = y
+	def __add__(self,other):
+		return punto(self.x+other.x,self.y+other.y)
+		
+class Bola:
+	velocidad_total = 6
+	velocidad_max_x = 5
+	velocidad_x = 0
+	velocidad_y = -velocidad_total
+	def __init__(self,x,y,radio):
+		self.x = x
+		self.y = y
+		self.radio = radio
+		self.diametro = self.radio*2
+		
+	def update_vel_x(self,paleta):
+		choque = self.x+self.radio - paleta.x
+		self.velocidad_x = ((((choque * 100)/ANCHO_PALETA_TOTAL) * 0.1)
+							- self.velocidad_max_x)
+		self.velocidad_x = max(-self.velocidad_max_x, self.velocidad_x)
+		self.velocidad_x = min(self.velocidad_max_x, self.velocidad_x)
+		
+	def update_vel_y():
+		self.velocidad_y = (self.velocidad_total * (math.sin(
+			math.radians(90 - math.degrees(math.asin(self.velocidad_x/float(
+			self.velocidad_total)))))))
+	
+class Ventana:
+	def __init__(self,ancho,alto,marco):
+		self.ancho = ancho
+		self.alto = alto
+		self.marco = marco
+		
+class Paleta:
+	def __init__(self,x,y,ancho,alto):
+		self.ancho = ancho
+		self.alto = alto
+		
+class Bloque:
+	def __init__(self,ancho,alto):
+		self.ancho = ancho
+		self.alto = alto
+
+ventana = Ventana(500,400,5)
+paleta = Paleta(50,10)
+bola = Bola(0,0,5)
+
 		
 punto_paleta = punto((ANCHO_VENTANA/2-ANCHO_PALETA/2),ALTO_VENTANA-ALTO_PALETA*2)
 
