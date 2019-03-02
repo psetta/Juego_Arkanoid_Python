@@ -75,6 +75,9 @@ class Paleta:
 		self.alto = alto
 		self.velocidad = velocidad
 		self.rect_pygame = pygame.Rect(x,y,ancho,alto)
+	def update_rect(self):
+		self.rect_pygame = pygame.Rect(self.punto.x,self.punto.y,
+										self.ancho,self.alto)
 		
 class Bloque:
 	def __init__(self,x,y,ancho,alto):
@@ -160,17 +163,17 @@ class Game:
 		self.dibujar_score()
 		self.dibujar_vidas()
 		
-	def tecla_pulsada(self):
-		return pygame.key.get_pressed()
-		
-	def movimiento(self):
-		if self.tecla_pulsada[K_LEFT]:
-			self.paleta.punto.x -= paleta.velocidad
-		
-	if tecla_pulsada[K_LEFT]:
-		punto_paleta.x -= VELOCIDADE_PALETA
-	if tecla_pulsada[K_RIGHT]:
-		punto_paleta.x += VELOCIDADE_PALETA
+	def movimiento_paleta(self):
+		key_pressed = pygame.key.get_pressed()
+		if key_pressed[K_LEFT]:
+			self.paleta.punto.x -= self.paleta.velocidad
+			self.paleta.update_rect()
+		if key_pressed[K_RIGHT]:
+			self.paleta.punto.x += self.paleta.velocidad
+			self.paleta.update_rect()
+			
+	def movimiento_bola(self):
+		pass
 		
 	def start(self):
 		while self.status.pygame_bucle:
@@ -180,10 +183,14 @@ class Game:
 			
 			pygame.display.update()
 			
+			self.movimiento_paleta()
+			self.movimiento_bola()
+			
 			for evento in pygame.event.get():
 				if evento.type == pygame.QUIT:
 					pygame.display.quit()
 					self.status.pygame_bucle = 0
+					
 			reloj.tick(60)
 		
 		print("Bye!")
