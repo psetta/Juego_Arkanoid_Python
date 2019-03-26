@@ -6,7 +6,7 @@ import math
 _alto_ventana = 500
 _ancho_ventana = 500
 _marco = 5
-_ancho_paleta = 50
+_ancho_paleta = 60
 _alto_paleta = 15
 _radio_bola = 6
 _ancho_bloque = 20
@@ -18,7 +18,7 @@ class Punto:
 		self.y = y
 		
 	def __add__(self,other):
-		return punto(self.x+other.x,self.y+other.y)
+		return Punto(self.x+other.x,self.y+other.y)
 		
 	def __len__(self):
 		return 2
@@ -46,27 +46,48 @@ class Ventana:
 											 score_alto-marco)
 		
 class Bola:
-	velocidad_total = 6
-	velocidad_max_x = 5
-	velocidad_x = 0
-	velocidad_y = -velocidad_total
+	_velocidad_total = 6
+	velocidad_max_x = _velocidad_total-1
+	velocidad = Punto(0,-_velocidad_total)
 	pegada = True
 	def __init__(self,x,y,radio):
 		self.punto = Punto(x,y)
 		self.radio = radio
 		self.diametro = self.radio*2
 		
-	def update_vel_x(self,paleta):
-		choque = self.punto.x+self.radio - paleta.punto.x
-		self.velocidad_x = ((((choque * 100)/ANCHO_PALETA_TOTAL) * 0.1)
-							- self.velocidad_max_x)
-		self.velocidad_x = max(-self.velocidad_max_x, self.velocidad_x)
-		self.velocidad_x = min(self.velocidad_max_x, self.velocidad_x)
+	def change_vel_x(self,paleta):
+		choque_x = self.punto.x - paleta.punto.x
+		self.velocidad.x = (self.velocidad.x*.5+
+			((((choque_x * 100)/paleta.ancho) * 0.1)- self.velocidad_max_x)*.5)
+		self.velocidad.x = max(-self.velocidad_max_x, self.velocidad.x)
+		self.velocidad.x = min(self.velocidad_max_x, self.velocidad.x)
 		
-	def update_vel_y():
-		self.velocidad_y = (self.velocidad_total * (math.sin(
-			math.radians(90 - math.degrees(math.asin(self.velocidad_x/float(
-			self.velocidad_total)))))))
+	def change_vel_y(self):
+		self.velocidad.y = -(self._velocidad_total * (math.sin(
+			math.radians(90 - math.degrees(math.asin(self.velocidad.x/float(
+			self._velocidad_total)))))))
+			
+	def colision_izq(self,ventana):
+		return self.punto.x-self.radio <= ventana.marco
+		
+	def colision_der(self,ventana):
+		return self.punto.x+self.radio >= ventana.ancho-ventana.marco
+		
+	def colision_top(self,ventana):
+		return self.punto.y-self.radio <= ventana.marco*2+ventana.score_alto
+		
+	def colision_paleta(self,paleta):
+		return (self.punto.x+self.radio > paleta.punto.x and 
+			self.punto.x-self.radio < paleta.punto.x+paleta.ancho and 
+			self.punto.y+self.radio > paleta.punto.y and 
+			self.punto.y-self.radio < paleta.punto.y+(paleta.alto/2))
+		
+	def colision(self,ventana,paleta):
+		return any(self.colision_izq(ventana),
+				   self.colision_der(ventana),
+				   self.colision_top(ventana),
+				   self.colision_paleta(paleta))
+			
 		
 class Paleta:
 	def __init__(self,x,y,ancho,alto,velocidad):
@@ -74,10 +95,17 @@ class Paleta:
 		self.ancho = ancho
 		self.alto = alto
 		self.velocidad = velocidad
-		self.rect_pygame = pygame.Rect(x,y,ancho,alto)
+		self.bola_radio = int(alto/2)
+		self.ancho_rect = self.ancho-self.bola_radio*2
+		self.rect_pygame = pygame.Rect(x+self.bola_radio,y,
+										self.ancho_rect,alto)
 	def update_rect(self):
-		self.rect_pygame = pygame.Rect(self.punto.x,self.punto.y,
-										self.ancho,self.alto)
+		self.rect_pygame = pygame.Rect(self.punto.x+self.bola_radio,
+					self.punto.y,self.ancho_rect,self.alto)
+	def colision_izq(self,ventana):
+		return self.punto.x <= ventana.marco
+	def colision_der(self,ventana):
+		return self.punto.x+self.ancho >= ventana.ancho-ventana.marco
 		
 class Bloque:
 	def __init__(self,x,y,ancho,alto):
@@ -91,6 +119,7 @@ class Status:
 		self.score = 0
 		self.game_over = 0
 		self.win = 0
+		self.jugando = 1
 		self.pygame_bucle = 1
 	
 class Game:
@@ -116,7 +145,7 @@ class Game:
 		elif self.status.win:
 			color = [0,200,0]
 		else:
-			color = [15,15,15]
+			color = [80,80,130]
 		self.ventana.pygame.fill(color)
 		
 	def dibujar_fondo(self):
@@ -127,19 +156,34 @@ class Game:
 		
 	def dibujar_paleta(self):
 		color = [150,150,150]
+		for i in range(2):
+			pygame.gfxdraw.aacircle(self.ventana.pygame,
+					int(self.paleta.punto.x+self.paleta.ancho_rect*i+
+							self.paleta.bola_radio),
+					int(self.paleta.punto.y+self.paleta.alto/2),
+					self.paleta.bola_radio,
+					color)
+			pygame.gfxdraw.filled_circle(self.ventana.pygame,
+					int(self.paleta.punto.x+self.paleta.ancho_rect*i+
+							self.paleta.bola_radio)-1*i,
+					int(self.paleta.punto.y+self.paleta.alto/2),
+					self.paleta.bola_radio,
+					color)
+			
+		color = [150,150,150]
 		pygame.draw.rect(self.ventana.pygame,color,self.paleta.rect_pygame)
+		border_size = int(self.paleta.ancho/25)
 		
 	def dibujar_bola(self):
 		color = [20,150,200]
-		pygame.gfxdraw.filled_circle(self.ventana.pygame,
-									 self.bola.punto.x,
-									 self.bola.punto.y,
-									 self.bola.radio,
-									 color)
-		color = [20,150,200]
 		pygame.gfxdraw.aacircle(self.ventana.pygame,
-								self.bola.punto.x,
-								self.bola.punto.y,
+								int(self.bola.punto.x),
+								int(self.bola.punto.y),
+								self.bola.radio,
+								color)
+		pygame.gfxdraw.filled_circle(self.ventana.pygame,
+								int(self.bola.punto.x),
+								int(self.bola.punto.y),
 								self.bola.radio,
 								color)
 								
@@ -165,15 +209,44 @@ class Game:
 		
 	def movimiento_paleta(self):
 		key_pressed = pygame.key.get_pressed()
-		if key_pressed[K_LEFT]:
-			self.paleta.punto.x -= self.paleta.velocidad
-			self.paleta.update_rect()
-		if key_pressed[K_RIGHT]:
-			self.paleta.punto.x += self.paleta.velocidad
-			self.paleta.update_rect()
+		if key_pressed[K_LEFT] or key_pressed[K_a]:
+			if self.paleta.colision_izq(self.ventana):
+				self.paleta.punto.x = self.ventana.marco
+			else:
+				self.paleta.punto.x -= self.paleta.velocidad
+				self.paleta.update_rect()
+		if key_pressed[K_RIGHT] or key_pressed[K_d]:
+			if self.paleta.colision_der(self.ventana):
+				self.paleta.punto.x = (self.ventana.ancho - 
+					(self.ventana.marco + self.paleta.ancho))
+			else:
+				self.paleta.punto.x += self.paleta.velocidad
+				self.paleta.update_rect()
 			
 	def movimiento_bola(self):
-		pass
+		if self.bola.pegada:
+			self.bola.punto.x = int(self.paleta.punto.x+self.paleta.ancho/2)
+		else:
+			if self.bola.colision_paleta(self.paleta):
+				self.bola.change_vel_x(self.paleta)
+				self.bola.change_vel_y()
+			if self.bola.colision_izq(self.ventana):
+				self.bola.velocidad.x = -self.bola.velocidad.x
+			if self.bola.colision_der(self.ventana):
+				self.bola.velocidad.x = -self.bola.velocidad.x
+			if self.bola.colision_top(self.ventana):
+				self.bola.velocidad.y = -self.bola.velocidad.y
+			self.bola.punto += self.bola.velocidad
+			
+	def eventos(self):
+		for evento in pygame.event.get():
+			if evento.type == pygame.QUIT:
+				pygame.display.quit()
+				self.status.pygame_bucle = 0
+			if evento.type == pygame.KEYDOWN:
+				if evento.key == pygame.K_SPACE:
+					if self.status.jugando:
+						self.bola.pegada = False
 		
 	def start(self):
 		while self.status.pygame_bucle:
@@ -186,10 +259,7 @@ class Game:
 			self.movimiento_paleta()
 			self.movimiento_bola()
 			
-			for evento in pygame.event.get():
-				if evento.type == pygame.QUIT:
-					pygame.display.quit()
-					self.status.pygame_bucle = 0
+			self.eventos()
 					
 			reloj.tick(60)
 		
