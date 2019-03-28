@@ -5,7 +5,7 @@ import math
 
 _alto_ventana = 500
 _ancho_ventana = 500
-_marco = 5
+_marco = 10
 _ancho_paleta = 60
 _alto_paleta = 15
 _radio_bola = 6
@@ -38,23 +38,90 @@ class Ventana:
 		self.marco = marco
 		self.score_alto = score_alto
 		self.pygame = pygame.display.set_mode([ancho,alto],pygame.RESIZABLE)
-		self.rect_pygame = pygame.Rect(marco,marco+score_alto,
-									   ancho-(marco*2),alto-(marco+score_alto))
-		self.rect_pygame_score = pygame.Rect(marco,
-											 marco,
-											 ancho-(marco*2),
-											 score_alto-marco)
+		self.rect_fondo = pygame.Rect(marco,marco+score_alto,
+								ancho-(marco*2),alto-(marco+score_alto))
+		self.rect_marco_izq = pygame.Rect(0,score_alto+marco,
+								marco,alto)
+		self.rect_marco_der = pygame.Rect(ancho-marco,score_alto+marco,
+								ancho,alto)
+		self.rect_marco_top = pygame.Rect(0,score_alto+marco,
+								ancho,marco)
+									
+	def dibujar_fondo(self):
+		color = [100,100,140]
+		pygame.draw.rect(self.pygame,color,self.rect_fondo)
+		
+	def dibujar_marco(self):
+		color = [160,160,160]
+		pygame.draw.rect(self.pygame,color,self.rect_marco_izq)
+		pygame.draw.rect(self.pygame,color,self.rect_marco_der)
+		pygame.draw.rect(self.pygame,color,self.rect_marco_top)
 		
 class Bola:
 	_velocidad_total = 6
 	velocidad_max_x = _velocidad_total-1
 	velocidad = Punto(0,-_velocidad_total)
 	pegada = True
+	
 	def __init__(self,x,y,radio):
 		self.punto = Punto(x,y)
 		self.radio = radio
 		self.diametro = self.radio*2
+		self.max_sombras = 10
+		self.sombras = []
 		
+	def movimiento(self,ventana,paleta):
+		if self.pegada:
+			self.punto.x = int(paleta.punto.x+paleta.ancho/2)
+			if self.sombras:
+				self.sombras.pop()
+		else:
+			if self.colision_paleta(paleta):
+				self.change_vel_x(paleta)
+				self.change_vel_y()
+			if self.colision_izq(ventana):
+				self.velocidad.x = -self.velocidad.x
+			if self.colision_der(ventana):
+				self.velocidad.x = -self.velocidad.x
+			if self.colision_top(ventana):
+				self.velocidad.y = -self.velocidad.y
+				
+			self.sombras.insert(0,self.punto)
+			if len(self.sombras) > self.max_sombras:
+				self.sombras.pop()
+				
+			self.punto += self.velocidad
+	
+	def dibujar(self,ventana):
+		color = [20,150,200]
+		pygame.gfxdraw.aacircle(ventana.pygame,
+								int(self.punto.x),
+								int(self.punto.y),
+								self.radio,
+								color)
+		pygame.gfxdraw.filled_circle(ventana.pygame,
+								int(self.punto.x),
+								int(self.punto.y),
+								self.radio,
+								color)
+		
+	def dibujar_sombras(self,ventana):
+		alpha = 100
+		for ps in self.sombras:
+			color = [20,150,200,alpha]
+			alpha = int(alpha/2)
+			pygame.gfxdraw.aacircle(ventana.pygame,
+								int(ps.x),
+								int(ps.y),
+								self.radio,
+								color)
+			pygame.gfxdraw.filled_circle(ventana.pygame,
+								int(ps.x),
+								int(ps.y),
+								self.radio,
+								color)
+				
+			
 	def change_vel_x(self,paleta):
 		choque_x = self.punto.x - paleta.punto.x
 		self.velocidad.x = (self.velocidad.x*.5+
@@ -96,16 +163,48 @@ class Paleta:
 		self.alto = alto
 		self.velocidad = velocidad
 		self.bola_radio = int(alto/2)
-		self.ancho_rect = self.ancho-self.bola_radio*2
+		self.ancho_rect = self.ancho-(self.bola_radio*2+1)
 		self.rect_pygame = pygame.Rect(x+self.bola_radio,y,
 										self.ancho_rect,alto)
+										
+	def dibujar(self,ventana):
+		color = [200,20,20]
+		for i in range(2):
+			pygame.gfxdraw.aacircle(ventana.pygame,
+					int(self.punto.x+self.ancho_rect*i+
+							self.bola_radio),
+					int(self.punto.y+self.alto/2),
+					self.bola_radio,
+					color)
+			pygame.gfxdraw.filled_circle(ventana.pygame,
+					int(self.punto.x+self.ancho_rect*i+
+							self.bola_radio)-1*i,
+					int(self.punto.y+self.alto/2),
+					self.bola_radio,
+					color)
+			
+		color = [150,150,150]
+		pygame.draw.rect(ventana.pygame,color,self.rect_pygame)
+		for i in range(2):
+			pygame.draw.line(ventana.pygame,
+					[0,0,0],
+					self.punto+Punto(
+						self.bola_radio+i*self.ancho_rect,
+						0),
+					self.punto+Punto(
+						self.bola_radio+i*self.ancho_rect,
+						self.alto-1))
+						
 	def update_rect(self):
 		self.rect_pygame = pygame.Rect(self.punto.x+self.bola_radio,
 					self.punto.y,self.ancho_rect,self.alto)
+					
 	def colision_izq(self,ventana):
 		return self.punto.x <= ventana.marco
+		
 	def colision_der(self,ventana):
-		return self.punto.x+self.ancho >= ventana.ancho-ventana.marco
+		return (self.punto.x+self.ancho >= 
+				ventana.ancho-ventana.marco)
 		
 class Bloque:
 	def __init__(self,x,y,ancho,alto):
@@ -121,13 +220,40 @@ class Status:
 		self.win = 0
 		self.jugando = 1
 		self.pygame_bucle = 1
+		
+	def dibujar_score(self,ventana):
+		color = [200,200,200]
+		font = pygame.font.SysFont("System", int(ventana.ancho/20))
+		text_score = font.render(str(self.score),1,color)
+		ventana.pygame.blit(text_score,[
+								int(ventana.ancho/8)+text_score.get_width(),
+								ventana.marco+text_score.get_height()])
+								 
+	def dibujar_high_score(self,ventana):
+		color = [200,30,30]
+		font = pygame.font.SysFont("System", int(ventana.ancho/20))
+		text_score = font.render("HIGH SCORE",1,color)
+		ventana.pygame.blit(text_score,[int(ventana.ancho/2.5),ventana.marco])
+		
+	def dibujar_vidas(self,ventana):
+		color = [200,30,30]
+		font = pygame.font.SysFont("System", int(ventana.ancho/20))
+		text_vidas = font.render(str(self.vidas)+"UP",1,color)
+		ventana.pygame.blit(text_vidas,[int(ventana.ancho/8),ventana.marco])
+		
+	def dibujar(self,ventana):
+		self.dibujar_score(ventana)
+		self.dibujar_high_score(ventana)
+		self.dibujar_vidas(ventana)
+		
+	
 	
 class Game:
 	def __init__(self):
 		pygame.init()
 		self.status = Status()
 		self.ventana = Ventana(_ancho_ventana,_alto_ventana,_marco,
-							   _alto_ventana/15)			   
+							   _alto_ventana/11)			   
 		self.paleta = Paleta(int(self.ventana.ancho/2-_ancho_paleta/2),
 							 int(self.ventana.alto-_alto_paleta*2),
 							 _ancho_paleta,
@@ -136,82 +262,21 @@ class Game:
 		self.bola = Bola(int(self.paleta.punto.x+self.paleta.ancho/2),
 						 int(self.paleta.punto.y-_radio_bola),
 						 _radio_bola)
-						 
-		self.font = pygame.font.SysFont("System", int(self.ventana.ancho/20))
-		
-	def dibujar_relleno(self):
-		if self.status.game_over:
-			color = [200,0,0]
-		elif self.status.win:
-			color = [0,200,0]
-		else:
-			color = [80,80,130]
-		self.ventana.pygame.fill(color)
-		
-	def dibujar_fondo(self):
-		color = [250,250,250]
-		pygame.draw.rect(self.ventana.pygame,color,self.ventana.rect_pygame)
-		color = [230,230,230]
-		pygame.draw.rect(self.ventana.pygame,color,self.ventana.rect_pygame_score)
-		
-	def dibujar_paleta(self):
-		color = [150,150,150]
-		for i in range(2):
-			pygame.gfxdraw.aacircle(self.ventana.pygame,
-					int(self.paleta.punto.x+self.paleta.ancho_rect*i+
-							self.paleta.bola_radio),
-					int(self.paleta.punto.y+self.paleta.alto/2),
-					self.paleta.bola_radio,
-					color)
-			pygame.gfxdraw.filled_circle(self.ventana.pygame,
-					int(self.paleta.punto.x+self.paleta.ancho_rect*i+
-							self.paleta.bola_radio)-1*i,
-					int(self.paleta.punto.y+self.paleta.alto/2),
-					self.paleta.bola_radio,
-					color)
-			
-		color = [150,150,150]
-		pygame.draw.rect(self.ventana.pygame,color,self.paleta.rect_pygame)
-		border_size = int(self.paleta.ancho/25)
-		
-	def dibujar_bola(self):
-		color = [20,150,200]
-		pygame.gfxdraw.aacircle(self.ventana.pygame,
-								int(self.bola.punto.x),
-								int(self.bola.punto.y),
-								self.bola.radio,
-								color)
-		pygame.gfxdraw.filled_circle(self.ventana.pygame,
-								int(self.bola.punto.x),
-								int(self.bola.punto.y),
-								self.bola.radio,
-								color)
-								
-	def dibujar_score(self):
-		color = [15,15,15]
-		text_score = self.font.render(("SCORE: "+str(self.status.score)),1,color)
-		self.ventana.pygame.blit(text_score,[self.ventana.marco,self.ventana.marco])
-		
-	def dibujar_vidas(self):
-		color = [15,15,15]
-		text_vidas = self.font.render(("VIDAS: "+str(self.status.vidas)),1,color)
-		self.ventana.pygame.blit(text_vidas,[self.ventana.ancho-
-								(self.ventana.marco+text_vidas.get_width()),
-								 self.ventana.marco])
 		
 	def dibujar_todo(self):
-		self.dibujar_relleno()
-		self.dibujar_fondo()
-		self.dibujar_paleta()
-		self.dibujar_bola()
-		self.dibujar_score()
-		self.dibujar_vidas()
+		self.ventana.dibujar_fondo()
+		self.ventana.dibujar_marco()
+		self.paleta.dibujar(self.ventana)
+		self.bola.dibujar(self.ventana)
+		self.bola.dibujar_sombras(self.ventana)
+		self.status.dibujar(self.ventana)
 		
 	def movimiento_paleta(self):
 		key_pressed = pygame.key.get_pressed()
 		if key_pressed[K_LEFT] or key_pressed[K_a]:
 			if self.paleta.colision_izq(self.ventana):
 				self.paleta.punto.x = self.ventana.marco
+				self.paleta.update_rect()
 			else:
 				self.paleta.punto.x -= self.paleta.velocidad
 				self.paleta.update_rect()
@@ -219,6 +284,7 @@ class Game:
 			if self.paleta.colision_der(self.ventana):
 				self.paleta.punto.x = (self.ventana.ancho - 
 					(self.ventana.marco + self.paleta.ancho))
+				self.paleta.update_rect()
 			else:
 				self.paleta.punto.x += self.paleta.velocidad
 				self.paleta.update_rect()
@@ -257,7 +323,7 @@ class Game:
 			pygame.display.update()
 			
 			self.movimiento_paleta()
-			self.movimiento_bola()
+			self.bola.movimiento(self.ventana,self.paleta)
 			
 			self.eventos()
 					
@@ -362,9 +428,6 @@ while 0:
 	
 	if punto_bola.y < MARCO:
 		VELOCIDADE_BOLA_Y = -VELOCIDADE_BOLA_Y
-		
-	if punto_bola.x < MARCO and VELOCIDADE_BOLA_X < 0:
-		VELOCIDADE_BOLA_X = -VELOCIDADE_BOLA_X
 	elif punto_bola.x > ANCHO_VENTANA-(MARCO+LADO_BOLA) and VELOCIDADE_BOLA_X > 0:
 		VELOCIDADE_BOLA_X = -VELOCIDADE_BOLA_X
 	
