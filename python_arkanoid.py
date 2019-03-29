@@ -3,8 +3,8 @@ import pygame.gfxdraw
 from pygame.locals import *
 import math
 
-_alto_ventana = 500
-_ancho_ventana = 500
+_alto_ventana = 600
+_ancho_ventana = 600
 _marco = 10
 _ancho_paleta = 60
 _alto_paleta = 15
@@ -39,7 +39,7 @@ class Ventana:
 		self.score_alto = score_alto
 		self.pygame = pygame.display.set_mode([ancho,alto],pygame.RESIZABLE)
 		self.rect_fondo = pygame.Rect(marco,marco+score_alto,
-								ancho-(marco*2),alto-(marco+score_alto))
+								ancho-(marco*2),alto-(marco+score_alto)+1)
 		self.rect_marco_izq = pygame.Rect(0,score_alto+marco,
 								marco,alto)
 		self.rect_marco_der = pygame.Rect(ancho-marco,score_alto+marco,
@@ -50,7 +50,37 @@ class Ventana:
 	def dibujar_fondo(self):
 		color = [100,100,140]
 		pygame.draw.rect(self.pygame,color,self.rect_fondo)
-		
+		color = [60,60,80]
+		for i in range(10):
+			pygame.draw.aaline(self.pygame,
+				color,
+				(self.marco,(self.marco*2+self.score_alto)+i*self.alto/10),
+				((self.ancho-self.marco)-i*self.ancho/9,self.alto))
+		for i in range(1,10):
+			pygame.draw.aaline(self.pygame,
+				color,
+				(self.marco+i*self.ancho/9,self.marco*2+self.score_alto),
+				(self.ancho-self.marco,self.alto-i*self.alto/10))
+		for i in range(10):
+			pygame.draw.aaline(self.pygame,
+				color,
+				(self.marco+i*self.ancho/9,self.alto),
+				(self.ancho-self.marco,
+					self.marco*2+self.score_alto+i*self.alto/10))
+		for i in range(1,10):
+			pygame.draw.aaline(self.pygame,
+				color,
+				(self.marco,self.alto-i*self.alto/10),
+				((self.ancho-self.marco)-i*self.ancho/9,
+					self.marco*2+self.score_alto))
+		rect_alpha = pygame.Surface(
+						(self.ancho-self.marco*2,
+							self.alto-(self.marco*2+self.score_alto)),
+						pygame.SRCALPHA, 32)
+		rect_alpha.fill((100, 60, 100, 50))
+		self.pygame.blit(rect_alpha, 
+				(self.marco,self.marco*2+self.score_alto))
+	
 	def dibujar_marco(self):
 		color = [160,160,160]
 		pygame.draw.rect(self.pygame,color,self.rect_marco_izq)
@@ -168,7 +198,7 @@ class Paleta:
 										self.ancho_rect,alto)
 										
 	def dibujar(self,ventana):
-		color = [200,20,20]
+		color = [160,20,20]
 		for i in range(2):
 			pygame.gfxdraw.aacircle(ventana.pygame,
 					int(self.punto.x+self.ancho_rect*i+
@@ -183,9 +213,10 @@ class Paleta:
 					self.bola_radio,
 					color)
 			
-		color = [150,150,150]
+		color = [120,120,120]
 		pygame.draw.rect(ventana.pygame,color,self.rect_pygame)
 		for i in range(2):
+			color = [80,60,60]
 			pygame.draw.line(ventana.pygame,
 					[0,0,0],
 					self.punto+Punto(
@@ -216,6 +247,7 @@ class Status:
 	def __init__(self):
 		self.vidas = 5
 		self.score = 0
+		self.high_score = 50000
 		self.game_over = 0
 		self.win = 0
 		self.jugando = 1
@@ -226,14 +258,19 @@ class Status:
 		font = pygame.font.SysFont("System", int(ventana.ancho/20))
 		text_score = font.render(str(self.score),1,color)
 		ventana.pygame.blit(text_score,[
-								int(ventana.ancho/8)+text_score.get_width(),
-								ventana.marco+text_score.get_height()])
+						int(ventana.ancho/8)+text_score.get_width(),
+						ventana.marco+text_score.get_height()])
 								 
 	def dibujar_high_score(self,ventana):
 		color = [200,30,30]
 		font = pygame.font.SysFont("System", int(ventana.ancho/20))
 		text_score = font.render("HIGH SCORE",1,color)
 		ventana.pygame.blit(text_score,[int(ventana.ancho/2.5),ventana.marco])
+		color = [200,200,200]
+		text_score_n = font.render(str(self.high_score),1,color)
+		ventana.pygame.blit(text_score_n,[
+						int(ventana.ancho/2.5)+text_score.get_width()/4,
+						ventana.marco+text_score.get_height()])
 		
 	def dibujar_vidas(self,ventana):
 		color = [200,30,30]
