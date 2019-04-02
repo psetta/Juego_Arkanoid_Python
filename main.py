@@ -10,11 +10,11 @@ from Paleta import *
 from Bloque import *
 
 
-_alto_ventana = 600
+_alto_ventana = 650
 _ancho_ventana = 600
 _marco = 10
 _ancho_paleta = 60
-_alto_paleta = 15
+_alto_paleta = 16
 _radio_bola = 6
 _ancho_bloque = 20
 _alto_bloque = 10
@@ -23,20 +23,26 @@ _alto_bloque = 10
 class Game:
 	def __init__(self):
 		pygame.init()
-		self.status = Status()
-		self.ventana = Ventana(_ancho_ventana,_alto_ventana,_marco,
-							   _alto_ventana/11)			   
+		
+		self.ventana = Ventana(_ancho_ventana,
+							   _alto_ventana,_marco)	
+										   
 		self.paleta = Paleta(int(self.ventana.ancho/2-_ancho_paleta/2),
 							 int(self.ventana.alto-_alto_paleta*2),
 							 _ancho_paleta,
 							 _alto_paleta,
-							 5)					
+							 5)			
+							 		
 		self.bola = Pelota(int(self.paleta.punto.x+self.paleta.ancho/2),
-						 int(self.paleta.punto.y-_radio_bola),
-						 _radio_bola)
+						   int(self.paleta.punto.y-_radio_bola),
+						   _radio_bola)
+							
+		self.status = Status(self.ventana.ancho_juego/4,
+							 self.ventana.score_alto/2.2,
+							 self.ventana.marco)
 		
 	def dibujar_todo(self):
-		self.ventana.dibujar_fondo()
+		self.ventana.dibujar_fondo_juego()
 		self.ventana.dibujar_marco()
 		self.paleta.dibujar(self.ventana)
 		self.bola.dibujar(self.ventana)
@@ -48,18 +54,14 @@ class Game:
 		if key_pressed[K_LEFT] or key_pressed[K_a]:
 			if self.paleta.colision_izq(self.ventana):
 				self.paleta.punto.x = self.ventana.marco
-				self.paleta.update_rect()
 			else:
 				self.paleta.punto.x -= self.paleta.velocidad
-				self.paleta.update_rect()
 		if key_pressed[K_RIGHT] or key_pressed[K_d]:
 			if self.paleta.colision_der(self.ventana):
 				self.paleta.punto.x = (self.ventana.ancho - 
 					(self.ventana.marco + self.paleta.ancho))
-				self.paleta.update_rect()
 			else:
 				self.paleta.punto.x += self.paleta.velocidad
-				self.paleta.update_rect()
 			
 	def movimiento_bola(self):
 		if self.bola.pegada:
@@ -90,17 +92,19 @@ class Game:
 		while self.status.pygame_bucle:
 			reloj = pygame.time.Clock()
 			
+			#Dibujado
 			self.dibujar_todo()
-			
 			pygame.display.update()
 			
+			#Movimiento
 			self.movimiento_paleta()
 			self.bola.movimiento(self.ventana,self.paleta)
 			
+			#Eventos
 			self.eventos()
 					
+			#FPS
 			reloj.tick(60)
-		
 		print("Bye!")
 			
 			

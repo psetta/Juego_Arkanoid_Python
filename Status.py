@@ -1,7 +1,11 @@
 import pygame
 
 class Status:
-	def __init__(self):
+	def __init__(self,label_ancho,label_alto,marco):
+		self.label_ancho = label_ancho
+		self.label_alto = label_alto
+		self.font_size = int(min(label_alto*1.5,label_ancho*0.24))
+		self.marco = marco
 		self.vidas = 5
 		self.score = 0
 		self.high_score = 50000
@@ -9,33 +13,81 @@ class Status:
 		self.win = 0
 		self.jugando = 1
 		self.pygame_bucle = 1
+		self.score_img = self.crear_score_img()
+		self.hight_score_title_img = self.crear_high_score_title_img()
+		self.hight_score_img = self.crear_high_score_img()
+		self.vidas_img = self.crear_vidas_img()
 		
-	def dibujar_score(self,ventana):
+	def crear_score_img(self):
+		score_surface = pygame.Surface((
+							self.label_ancho,
+							self.label_alto))
 		color = [200,200,200]
-		font = pygame.font.SysFont("System", int(ventana.ancho/20))
-		text_score = font.render(str(self.score),1,color)
-		ventana.pygame.blit(text_score,[
-						int(ventana.ancho/8)+text_score.get_width(),
-						ventana.marco+text_score.get_height()])
-								 
-	def dibujar_high_score(self,ventana):
+		font = pygame.font.SysFont("System", self.font_size)
+		text = font.render(str(self.score),1,color)
+		score_surface.blit(text,[
+						self.label_ancho/2-text.get_width()/2,
+						self.label_alto/2-text.get_height()/2])
+		return score_surface
+						 
+	def crear_high_score_title_img(self):
+		hight_score_t_surface = pygame.Surface((
+								self.label_ancho,
+								self.label_alto))
 		color = [200,30,30]
-		font = pygame.font.SysFont("System", int(ventana.ancho/20))
-		text_score = font.render("HIGH SCORE",1,color)
-		ventana.pygame.blit(text_score,[int(ventana.ancho/2.5),ventana.marco])
+		font = pygame.font.SysFont("System", self.font_size)
+		text = font.render("HIGH SCORE",1,color)
+		hight_score_t_surface.blit(text,[
+						self.label_ancho/2-text.get_width()/2,
+						self.label_alto/2-text.get_height()/2])
+		return hight_score_t_surface
+		
+	def crear_high_score_img(self):
+		hight_score_surface = pygame.Surface((
+								self.label_ancho,
+								self.label_alto))
 		color = [200,200,200]
-		text_score_n = font.render(str(self.high_score),1,color)
-		ventana.pygame.blit(text_score_n,[
-						int(ventana.ancho/2.5)+text_score.get_width()/4,
-						ventana.marco+text_score.get_height()])
+		font = pygame.font.SysFont("System", self.font_size)
+		text = font.render(str(self.high_score),1,color)
+		hight_score_surface.blit(text,[
+						self.label_ancho/2-text.get_width()/2,
+						self.label_alto/2-text.get_height()/2])
+		return hight_score_surface
+		
+	def crear_vidas_img(self):
+		vidas_surface = pygame.Surface((
+							self.label_ancho,
+							self.label_alto))
+		color = [200,30,30]
+		font = pygame.font.SysFont("System", self.font_size)
+		text = font.render(str(self.vidas)+"UP",1,color)
+		vidas_surface.blit(text,[
+						self.label_ancho/2-text.get_width()/2,
+						self.label_alto/2-text.get_height()/2])
+		return vidas_surface
 		
 	def dibujar_vidas(self,ventana):
-		color = [200,30,30]
-		font = pygame.font.SysFont("System", int(ventana.ancho/20))
-		text_vidas = font.render(str(self.vidas)+"UP",1,color)
-		ventana.pygame.blit(text_vidas,[int(ventana.ancho/8),ventana.marco])
+		ventana.pygame.blit(self.vidas_img, (
+				ventana.marco+self.label_ancho/4,
+				ventana.marco))
+		
+	def dibujar_score(self,ventana):
+		ventana.pygame.blit(self.score_img, (
+				ventana.marco+self.label_ancho/4,
+				ventana.marco+self.label_alto))
+		
+	def dibujar_high_score_title(self,ventana):
+		ventana.pygame.blit(self.hight_score_title_img, (
+				ventana.marco+self.label_ancho*1.5,
+				ventana.marco))
+				
+	def dibujar_high_score(self,ventana):
+		ventana.pygame.blit(self.hight_score_img, (
+				ventana.marco+self.label_ancho*1.5,
+				ventana.marco+self.label_alto))
 		
 	def dibujar(self,ventana):
-		self.dibujar_score(ventana)
-		self.dibujar_high_score(ventana)
 		self.dibujar_vidas(ventana)
+		self.dibujar_score(ventana)
+		self.dibujar_high_score_title(ventana)
+		self.dibujar_high_score(ventana)
