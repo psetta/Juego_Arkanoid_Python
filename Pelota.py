@@ -22,21 +22,32 @@ class Pelota:
 			if self.sombras:
 				self.sombras.pop()
 		else:
-			if self.colision_paleta(paleta):
-				self.change_vel_x(paleta)
-				self.change_vel_y()
-			if self.colision_izq(ventana):
-				self.velocidad.x = -self.velocidad.x
-			if self.colision_der(ventana):
-				self.velocidad.x = -self.velocidad.x
-			if self.colision_top(ventana):
-				self.velocidad.y = -self.velocidad.y
+			if self.colision(ventana,paleta):
+				if self.colision_paleta(paleta):
+					self.change_vel_x(paleta)
+					self.change_vel_y()
+					self.punto.x += self.velocidad.x
+					self.punto.y = paleta.punto.y-self.radio
+				if self.colision_izq(ventana):
+					self.velocidad.x = -self.velocidad.x
+					self.punto.x += ventana.punto_i_juego.x-self.radio
+					self.punto.y += self.velocidad.y
+				if self.colision_der(ventana):
+					self.velocidad.x = -self.velocidad.x
+					self.punto.x = ventana.punto_f_juego.x-self.radio
+					self.punto.y += self.velocidad.y
+				if self.colision_top(ventana):
+					self.velocidad.y = -self.velocidad.y
+					self.punto.x += self.velocidad.x
+					self.punto.y = ventana.punto_i_juego.y+self.radio
+			else:
+				self.punto += self.velocidad
+			self.add_sombra()
 				
-			self.sombras.insert(0,self.punto)
-			if len(self.sombras) > self.max_sombras:
-				self.sombras.pop()
-				
-			self.punto += self.velocidad
+	def add_sombra(self):	
+		self.sombras.insert(0,self.punto)
+		if len(self.sombras) > self.max_sombras:
+			self.sombras.pop()
 	
 	def dibujar(self,ventana):
 		color = [20,150,200]
@@ -87,22 +98,24 @@ class Pelota:
 			self._velocidad_total)))))))
 			
 	def colision_izq(self,ventana):
-		return self.punto.x-self.radio <= ventana.marco
+		return self.punto.x-self.radio < ventana.marco
 		
 	def colision_der(self,ventana):
-		return self.punto.x+self.radio >= ventana.ancho-ventana.marco
+		return self.punto.x+self.radio > ventana.ancho-ventana.marco
 		
 	def colision_top(self,ventana):
-		return self.punto.y-self.radio <= ventana.marco*2+ventana.score_alto
+		return self.punto.y-self.radio < ventana.marco*2+ventana.score_alto
 		
 	def colision_paleta(self,paleta):
-		return (self.punto.x+self.radio > paleta.punto.x and 
-			self.punto.x-self.radio < paleta.punto.x+paleta.ancho and 
-			self.punto.y+self.radio > paleta.punto.y and 
-			self.punto.y-self.radio < paleta.punto.y+(paleta.alto/2))
+		punto_fut = self.punto+self.velocidad
+		if (punto_fut.x-self.punto.x != 0 and 
+		   (paleta.punto.x+self.ancho)-paleta.punto.x != 0):
+			return ((punto_fut.y-self.punto.y)/(punto_fut.x-self.punto.x) !=
+					(paleta.punto.y-paleta.punto.y)/
+					(paleta.punto.x+self.ancho)-paleta.punto.x)
 		
 	def colision(self,ventana,paleta):
-		return any(self.colision_izq(ventana),
+		return any([self.colision_izq(ventana),
 				   self.colision_der(ventana),
 				   self.colision_top(ventana),
-				   self.colision_paleta(paleta))
+				   self.colision_paleta(paleta)])

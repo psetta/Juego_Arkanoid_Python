@@ -1,6 +1,7 @@
 import pygame
 
 from Punto import *
+from pygame.locals import *
 
 class Paleta:
 	def __init__(self,x,y,ancho,alto,velocidad):
@@ -8,8 +9,8 @@ class Paleta:
 		self.ancho = ancho
 		self.alto = alto
 		self.velocidad = velocidad
-		self.ancho_rect_lat = ancho/6
-		self.ancho_rect_lat_2 = self.ancho_rect_lat/3
+		self.ancho_rect_lat_2 = self.calcular_tamanho_rect_2()
+		self.ancho_rect_lat = self.ancho_rect_lat_2*4
 		self.ancho_rect_central = (self.ancho-
 				(self.ancho_rect_lat*2+self.ancho_rect_lat_2*2))
 		self.rect_cent = pygame.Rect(
@@ -38,6 +39,25 @@ class Paleta:
 				self.ancho_rect_lat_2,
 				self.alto/2)
 		self.paleta_img = self.crear_paleta_img()
+		
+	def calcular_tamanho_rect_2(self):
+		return int(self.ancho/20)
+			
+	def centro(self):
+		return self.punto.x+self.ancho/2
+		
+	def movimiento(self,ventana):
+		key_pressed = pygame.key.get_pressed()
+		if key_pressed[K_LEFT] or key_pressed[K_a]:
+			if self.colision_izq(ventana):
+				self.punto.x = ventana.punto_i_juego.x
+			else:
+				self.punto.x -= self.velocidad
+		if key_pressed[K_RIGHT] or key_pressed[K_d]:
+			if self.colision_der(ventana):
+				self.punto.x = ventana.punto_f_juego.x-self.ancho
+			else:
+				self.punto.x += self.velocidad
 										
 	def dibujar(self,ventana):
 		ventana.pygame.blit(self.paleta_img,

@@ -1,4 +1,5 @@
 import pygame
+from Punto import *
 
 class Ventana:
 	def __init__(self,ancho,alto,marco):
@@ -8,6 +9,10 @@ class Ventana:
 		self.score_alto = self.alto/10
 		self.ancho_juego = self.ancho-self.marco*2
 		self.alto_juego = self.alto-(self.score_alto+self.marco*2)
+		self.punto_i_juego = Punto(self.marco,
+								   self.score_alto+self.marco*2)
+		self.punto_f_juego = Punto(self.ancho-self.marco,
+								   self.alto)
 		self.pygame = pygame.display.set_mode([ancho,alto],pygame.RESIZABLE)
 		self.rect_fondo = pygame.Rect(
 								0,

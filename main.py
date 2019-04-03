@@ -2,7 +2,6 @@ import pygame
 import pygame.gfxdraw
 
 from pygame.locals import *
-from Punto import *
 from Ventana import *
 from Status import *
 from Pelota import *
@@ -15,7 +14,7 @@ _ancho_ventana = 600
 _marco = 10
 _ancho_paleta = 60
 _alto_paleta = 16
-_radio_bola = 6
+_radio_pelota = 6
 _ancho_bloque = 20
 _alto_bloque = 10
 	
@@ -33,9 +32,9 @@ class Game:
 							 _alto_paleta,
 							 5)			
 							 		
-		self.bola = Pelota(int(self.paleta.punto.x+self.paleta.ancho/2),
-						   int(self.paleta.punto.y-_radio_bola),
-						   _radio_bola)
+		self.pelota = Pelota(int(self.paleta.punto.x+self.paleta.ancho/2),
+						   int(self.paleta.punto.y-_radio_pelota),
+						   _radio_pelota)
 							
 		self.status = Status(self.ventana.ancho_juego/4,
 							 self.ventana.score_alto/2.2,
@@ -45,8 +44,8 @@ class Game:
 		self.ventana.dibujar_fondo_juego()
 		self.ventana.dibujar_marco()
 		self.paleta.dibujar(self.ventana)
-		self.bola.dibujar(self.ventana)
-		self.bola.dibujar_sombras(self.ventana)
+		self.pelota.dibujar(self.ventana)
+		self.pelota.dibujar_sombras(self.ventana)
 		self.status.dibujar(self.ventana)
 		
 	def movimiento_paleta(self):
@@ -63,21 +62,6 @@ class Game:
 			else:
 				self.paleta.punto.x += self.paleta.velocidad
 			
-	def movimiento_bola(self):
-		if self.bola.pegada:
-			self.bola.punto.x = int(self.paleta.punto.x+self.paleta.ancho/2)
-		else:
-			if self.bola.colision_paleta(self.paleta):
-				self.bola.change_vel_x(self.paleta)
-				self.bola.change_vel_y()
-			if self.bola.colision_izq(self.ventana):
-				self.bola.velocidad.x = -self.bola.velocidad.x
-			if self.bola.colision_der(self.ventana):
-				self.bola.velocidad.x = -self.bola.velocidad.x
-			if self.bola.colision_top(self.ventana):
-				self.bola.velocidad.y = -self.bola.velocidad.y
-			self.bola.punto += self.bola.velocidad
-			
 	def eventos(self):
 		for evento in pygame.event.get():
 			if evento.type == pygame.QUIT:
@@ -86,22 +70,22 @@ class Game:
 			if evento.type == pygame.KEYDOWN:
 				if evento.key == pygame.K_SPACE:
 					if self.status.jugando:
-						self.bola.pegada = False
+						self.pelota.pegada = False
 		
 	def start(self):
 		while self.status.pygame_bucle:
 			reloj = pygame.time.Clock()
 			
+			#Eventos
+			self.eventos()
+			
+			#Movimiento
+			self.paleta.movimiento(self.ventana)
+			self.pelota.movimiento(self.ventana,self.paleta)
+			
 			#Dibujado
 			self.dibujar_todo()
 			pygame.display.update()
-			
-			#Movimiento
-			self.movimiento_paleta()
-			self.bola.movimiento(self.ventana,self.paleta)
-			
-			#Eventos
-			self.eventos()
 					
 			#FPS
 			reloj.tick(60)
@@ -140,12 +124,12 @@ while 0:
 	pygame.draw.aaline(ventana, [40,40,40], [punto_paleta.x, punto_paleta.y], [punto_paleta.x+ANCHO_PALETA,punto_paleta.y])
 	pygame.draw.aaline(ventana, [40,40,40], [punto_paleta.x, punto_paleta.y+ALTO_PALETA], [punto_paleta.x+ANCHO_PALETA,punto_paleta.y+ALTO_PALETA])
 	
-	#DEBUXADO BOLA
+	#DEBUXADO pelota
 	
-	rect_bola = pygame.Rect(punto_bola.x,punto_bola.y,LADO_BOLA,LADO_BOLA)
+	rect_pelota = pygame.Rect(punto_pelota.x,punto_pelota.y,LADO_pelota,LADO_pelota)
 	
-	pygame.gfxdraw.aacircle(ventana, int(punto_bola.x+LADO_BOLA/2), int(punto_bola.y+LADO_BOLA/2), LADO_BOLA/2, [0,0,0])
-	pygame.gfxdraw.filled_circle(ventana, int(punto_bola.x+LADO_BOLA/2), int(punto_bola.y+LADO_BOLA/2), LADO_BOLA/2, [0,0,0])
+	pygame.gfxdraw.aacircle(ventana, int(punto_pelota.x+LADO_pelota/2), int(punto_pelota.y+LADO_pelota/2), LADO_pelota/2, [0,0,0])
+	pygame.gfxdraw.filled_circle(ventana, int(punto_pelota.x+LADO_pelota/2), int(punto_pelota.y+LADO_pelota/2), LADO_pelota/2, [0,0,0])
 	
 	#DEBUXADO DOS BLOQUES:
 	
@@ -193,33 +177,33 @@ while 0:
 	#MOV. PELOTA
 	
 	if pelota_pegada:
-		punto_bola = punto((punto_paleta.x+ANCHO_PALETA/2-LADO_BOLA/2),(punto_paleta.y-LADO_BOLA))
+		punto_pelota = punto((punto_paleta.x+ANCHO_PALETA/2-LADO_pelota/2),(punto_paleta.y-LADO_pelota))
 	else:
-		punto_bola.x += VELOCIDADE_BOLA_X
-		punto_bola.y += VELOCIDADE_BOLA_Y
+		punto_pelota.x += VELOCIDADE_pelota_X
+		punto_pelota.y += VELOCIDADE_pelota_Y
 		
-	#COLISIONS BOLA:
+	#COLISIONS pelota:
 	
 	#COL. MARCO
 	
-	if punto_bola.y < MARCO:
-		VELOCIDADE_BOLA_Y = -VELOCIDADE_BOLA_Y
-	elif punto_bola.x > ANCHO_VENTANA-(MARCO+LADO_BOLA) and VELOCIDADE_BOLA_X > 0:
-		VELOCIDADE_BOLA_X = -VELOCIDADE_BOLA_X
+	if punto_pelota.y < MARCO:
+		VELOCIDADE_pelota_Y = -VELOCIDADE_pelota_Y
+	elif punto_pelota.x > ANCHO_VENTANA-(MARCO+LADO_pelota) and VELOCIDADE_pelota_X > 0:
+		VELOCIDADE_pelota_X = -VELOCIDADE_pelota_X
 	
 	#COL. PALETA:
 	
-	if punto_bola.x > (rect_paleta.x-RADIO_CIRCULO)-LADO_BOLA and punto_bola.x < punto_paleta.x+ANCHO_PALETA+RADIO_CIRCULO and punto_bola.y >= punto_paleta.y-LADO_BOLA and punto_bola.y < punto_paleta.y and VELOCIDADE_BOLA_Y > 0:
-		VELOCIDADE_BOLA_X = calc_vel_bola_x()
-		VELOCIDADE_BOLA_Y = calc_vel_bola_y()
-		VELOCIDADE_BOLA_Y = -VELOCIDADE_BOLA_Y
+	if punto_pelota.x > (rect_paleta.x-RADIO_CIRCULO)-LADO_pelota and punto_pelota.x < punto_paleta.x+ANCHO_PALETA+RADIO_CIRCULO and punto_pelota.y >= punto_paleta.y-LADO_pelota and punto_pelota.y < punto_paleta.y and VELOCIDADE_pelota_Y > 0:
+		VELOCIDADE_pelota_X = calc_vel_pelota_x()
+		VELOCIDADE_pelota_Y = calc_vel_pelota_y()
+		VELOCIDADE_pelota_Y = -VELOCIDADE_pelota_Y
 		
 	#COL. BLOQUES:
 	
-	rect_bola_prox_mov = pygame.Rect(rect_bola.x+VELOCIDADE_BOLA_X,rect_bola.y+VELOCIDADE_BOLA_Y,LADO_BOLA,LADO_BOLA)
+	rect_pelota_prox_mov = pygame.Rect(rect_pelota.x+VELOCIDADE_pelota_X,rect_pelota.y+VELOCIDADE_pelota_Y,LADO_pelota,LADO_pelota)
 	
-	if rect_bola_prox_mov.collidelistall(lista_bloques) and not pelota_pegada:
-		lista_colisions = rect_bola_prox_mov.collidelistall(lista_bloques)
+	if rect_pelota_prox_mov.collidelistall(lista_bloques) and not pelota_pegada:
+		lista_colisions = rect_pelota_prox_mov.collidelistall(lista_bloques)
 		ubicacion_rest = 0
 		score = score + (len(lista_colisions) * 10)
 		if score >= 800:
@@ -228,11 +212,11 @@ while 0:
 		for i in lista_colisions:
 			del lista_bloques[i-ubicacion_rest]
 			ubicacion_rest += 1
-		VELOCIDADE_BOLA_Y = -VELOCIDADE_BOLA_Y
+		VELOCIDADE_pelota_Y = -VELOCIDADE_pelota_Y
 	
-	#BOLA FORA:
+	#pelota FORA:
 	
-	if punto_bola.y > ALTO_VENTANA*1.2:
+	if punto_pelota.y > ALTO_VENTANA*1.2:
 		if not game_over:
 			vidas -= 1
 		if vidas <= 0:
@@ -242,9 +226,9 @@ while 0:
 		else:
 			pelota_pegada = True
 		if game_over or victoria:
-			punto_bola = punto(ANCHO_VENTANA,ALTO_VENTANA)
+			punto_pelota = punto(ANCHO_VENTANA,ALTO_VENTANA)
 		else:
-			punto_bola = punto((punto_paleta.x+ANCHO_PALETA/2-LADO_BOLA/2),(punto_paleta.y-LADO_BOLA))
+			punto_pelota = punto((punto_paleta.x+ANCHO_PALETA/2-LADO_pelota/2),(punto_paleta.y-LADO_pelota))
 	
 	#UPDATE DA PANTALLA
 	
