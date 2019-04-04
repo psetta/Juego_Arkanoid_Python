@@ -9,6 +9,7 @@ class Pelota:
 	velocidad = Punto(0,-_velocidad_total)
 	pegada = True
 	
+	#self, int, int, int
 	def __init__(self,x,y,radio):
 		self.punto = Punto(x,y)
 		self.radio = radio
@@ -16,6 +17,7 @@ class Pelota:
 		self.max_sombras = 10
 		self.sombras = []
 		
+	#self, Ventana, Paleta => None
 	def movimiento(self,ventana,paleta):
 		if self.pegada:
 			self.punto.x = int(paleta.punto.x+paleta.ancho/2)
@@ -44,11 +46,13 @@ class Pelota:
 				self.punto += self.velocidad
 			self.add_sombra()
 				
+	#self => None
 	def add_sombra(self):	
 		self.sombras.insert(0,self.punto)
 		if len(self.sombras) > self.max_sombras:
 			self.sombras.pop()
 	
+	#self, Ventana => None
 	def dibujar(self,ventana):
 		color = [20,150,200]
 		pygame.gfxdraw.aacircle(ventana.pygame,
@@ -67,7 +71,8 @@ class Pelota:
 								int(self.punto.y),
 								self.radio,
 								color)
-		
+	
+	#self => Ventana => None	
 	def dibujar_sombras(self,ventana):
 		alpha = 80
 		for ps in self.sombras:
@@ -84,36 +89,55 @@ class Pelota:
 								self.radio,
 								color)
 				
-			
+	#self, Paleta => None		
 	def change_vel_x(self,paleta):
 		choque_x = self.punto.x - paleta.punto.x
 		self.velocidad.x = (self.velocidad.x*.5+
-			((((choque_x * 100)/paleta.ancho) * 0.1)- self.velocidad_max_x)*.5)
+			((((choque_x * 100)/paleta.ancho) * 0.1)
+				- self.velocidad_max_x)
+			*.5)
 		self.velocidad.x = max(-self.velocidad_max_x, self.velocidad.x)
 		self.velocidad.x = min(self.velocidad_max_x, self.velocidad.x)
 		
+	#self => None
 	def change_vel_y(self):
 		self.velocidad.y = -(self._velocidad_total * (math.sin(
-			math.radians(90 - math.degrees(math.asin(self.velocidad.x/float(
-			self._velocidad_total)))))))
+			math.radians(90 - math.degrees(
+				math.asin(self.velocidad.x/float(self._velocidad_total)))
+			))))
 			
+	#self, Ventana => Boolean
 	def colision_izq(self,ventana):
 		return self.punto.x-self.radio < ventana.marco
 		
+	#self, Ventana => Boolean
 	def colision_der(self,ventana):
 		return self.punto.x+self.radio > ventana.ancho-ventana.marco
 		
+	#self, Ventana => Boolean
 	def colision_top(self,ventana):
 		return self.punto.y-self.radio < ventana.marco*2+ventana.score_alto
 		
+	#self, Paleta => Boolean
 	def colision_paleta(self,paleta):
 		punto_fut = self.punto+self.velocidad
-		if (punto_fut.x-self.punto.x != 0 and 
-		   (paleta.punto.x+self.ancho)-paleta.punto.x != 0):
-			return ((punto_fut.y-self.punto.y)/(punto_fut.x-self.punto.x) !=
-					(paleta.punto.y-paleta.punto.y)/
-					(paleta.punto.x+self.ancho)-paleta.punto.x)
+		pelota_rect_mov = [
+					min(self.punto.x,punto_fut.x),
+					min(self.punto.y,punto_fut.y),
+					max(self.punto.x,punto_fut.x),
+					max(self.punto.y,punto_fut.y)]
+		paleta_rect = [paleta.punto.x,
+					   paleta.punto.y,
+					   paleta.punto.x+paleta.ancho,
+					   paleta.punto.y+paleta.alto/2]		  
+		return  not any([paleta_rect[0] > pelota_rect_mov[2],
+				 paleta_rect[2] < pelota_rect_mov[0],
+				 paleta_rect[1] > pelota_rect_mov[3],
+				 paleta_rect[3] < pelota_rect_mov[1]])		 
 		
+		
+		
+	#self, Ventana, Paleta => Boolean
 	def colision(self,ventana,paleta):
 		return any([self.colision_izq(ventana),
 				   self.colision_der(ventana),

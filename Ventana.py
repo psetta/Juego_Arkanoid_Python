@@ -2,6 +2,7 @@ import pygame
 from Punto import *
 
 class Ventana:
+	#self, int, int, int => None
 	def __init__(self,ancho,alto,marco):
 		self.ancho = ancho
 		self.alto = alto
@@ -14,33 +15,15 @@ class Ventana:
 		self.punto_f_juego = Punto(self.ancho-self.marco,
 								   self.alto)
 		self.pygame = pygame.display.set_mode([ancho,alto],pygame.RESIZABLE)
-		self.rect_fondo = pygame.Rect(
-								0,
-								0,
-								ancho-(self.marco*2),
-								alto-(self.marco+self.score_alto))
-		self.rect_marco_izq = pygame.Rect(
-								0,
-								0,
-								self.marco,
-								self.alto)
-		self.rect_marco_der = pygame.Rect(
-								self.ancho-self.marco,
-								0,
-								self.ancho,
-								self.alto)
-		self.rect_marco_top = pygame.Rect(
-								0,
-								0,
-								self.ancho,
-								self.marco)
 		self.fondo_img = self.crear_fondo_juego()
 		self.marco_img = self.crear_marco() 
 		
+	#self => None
 	def dibujar_fondo_juego(self):
 		self.pygame.blit(self.fondo_img, 
 				(self.marco,self.marco*2+self.score_alto))
-									
+					
+	#self => pygame.Surface				
 	def crear_fondo_juego(self):
 		fondo = pygame.Surface((
 						int(self.ancho_juego),
@@ -96,21 +79,38 @@ class Ventana:
 						pygame.SRCALPHA, 32)
 		rect_alpha.fill((100, 100, 140, 160))
 		fondo.blit(rect_alpha, (0,0))
-		
 		return fondo
 		
+	#self => None
 	def dibujar_marco(self):
 			self.pygame.blit(self.marco_img, 
 				(0,self.marco+self.score_alto))
 		
+	#self => pygame.Surface
 	def crear_marco(self):
+		rect_marco_izq = pygame.Rect(
+							0,
+							0,
+							self.marco,
+							self.alto)
+		rect_marco_der = pygame.Rect(
+							self.ancho-self.marco,
+							0,
+							self.ancho,
+							self.alto)
+		rect_marco_top = pygame.Rect(
+							0,
+							0,
+							self.ancho,
+							self.marco)
+		
 		marco_img = pygame.Surface(
 						(self.ancho,self.alto-self.score_alto),
 						pygame.SRCALPHA, 32)
 		color = [120,120,120]
-		pygame.draw.rect(marco_img,color,self.rect_marco_izq)
-		pygame.draw.rect(marco_img,color,self.rect_marco_der)
-		pygame.draw.rect(marco_img,color,self.rect_marco_top)
+		pygame.draw.rect(marco_img,color,rect_marco_izq)
+		pygame.draw.rect(marco_img,color,rect_marco_der)
+		pygame.draw.rect(marco_img,color,rect_marco_top)
 		color = [140,140,140]
 		pygame.draw.line(marco_img,
 						color,
