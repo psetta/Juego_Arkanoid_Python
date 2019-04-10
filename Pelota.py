@@ -135,8 +135,6 @@ class Pelota:
 				 paleta_rect[1] > pelota_rect_mov[3],
 				 paleta_rect[3] < pelota_rect_mov[1]])		 
 		
-		
-		
 	#self, Ventana, Paleta => Boolean
 	def colision(self,ventana,paleta):
 		return any([self.colision_izq(ventana),
