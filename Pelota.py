@@ -4,7 +4,7 @@ import math
 from Punto import *
 
 class Pelota:
-	_velocidad_total = 6
+	_velocidad_total = 20
 	velocidad_max_x = _velocidad_total-1
 	velocidad = Punto(0,-_velocidad_total)
 	pegada = True
@@ -91,11 +91,10 @@ class Pelota:
 				
 	#self, Paleta => None		
 	def change_vel_x(self,paleta):
-		choque_x = self.punto.x - paleta.punto.x
-		self.velocidad.x = (self.velocidad.x*.5+
-			((((choque_x * 100)/paleta.ancho) * 0.1)
-				- self.velocidad_max_x)
-			*.5)
+		choque_x = (((self.punto.x-(paleta.punto.x+paleta.ancho/2))*100)/
+					(paleta.ancho/2))
+		self.velocidad.x = (self.velocidad.x*.4+
+			((self.velocidad_max_x*choque_x)/100)*.6)
 		self.velocidad.x = max(-self.velocidad_max_x, self.velocidad.x)
 		self.velocidad.x = min(self.velocidad_max_x, self.velocidad.x)
 		
@@ -116,7 +115,7 @@ class Pelota:
 		
 	#self, Ventana => Boolean
 	def colision_top(self,ventana):
-		return self.punto.y-self.radio < ventana.marco*2+ventana.score_alto
+		return self.punto.y-self.radio < ventana.punto_i_juego.y
 		
 	#self, Paleta => Boolean
 	def colision_paleta(self,paleta):

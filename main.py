@@ -32,11 +32,11 @@ class Game:
 							 int(self.ventana.alto-_alto_paleta*2),
 							 _ancho_paleta,
 							 _alto_paleta,
-							_velocidad_paleta)			
+							 _velocidad_paleta)			
 							 		
 		self.pelota = Pelota(int(self.paleta.punto.x+self.paleta.ancho/2),
-						   int(self.paleta.punto.y-_radio_pelota),
-						   _radio_pelota)
+							 int(self.paleta.punto.y-_radio_pelota),
+							 _radio_pelota)
 							
 		self.status = Status(self.ventana.ancho_juego/4,
 							 self.ventana.score_alto/2.2,
