@@ -106,15 +106,18 @@ class Pelota:
 			
 	#self, Ventana => Boolean
 	def colision_izq(self,ventana):
-		return self.punto.x-self.radio < ventana.marco
+		punto_fut = self.punto+self.velocidad
+		return punto_fut.x-self.radio < ventana.marco
 		
 	#self, Ventana => Boolean
 	def colision_der(self,ventana):
-		return self.punto.x+self.radio > ventana.ancho-ventana.marco
+		punto_fut = self.punto+self.velocidad
+		return punto_fut.x+self.radio > ventana.ancho-ventana.marco
 		
 	#self, Ventana => Boolean
 	def colision_top(self,ventana):
-		return self.punto.y-self.radio < ventana.punto_i_juego.y
+		punto_fut = self.punto+self.velocidad
+		return punto_fut.y-self.radio < ventana.punto_i_juego.y
 		
 	#self, Paleta => Boolean
 	def colision_paleta(self,paleta):

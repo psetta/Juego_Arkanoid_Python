@@ -15,7 +15,7 @@ _marco = 10
 _ancho_paleta = 60
 _alto_paleta = 16
 _velocidad_paleta = 5
-_velocidad_pelota = 20
+_velocidad_pelota = 5
 _radio_pelota = 6
 _ancho_bloque = 20
 _alto_bloque = 10
@@ -94,8 +94,7 @@ class Game:
 			#Movimiento
 			self.paleta.movimiento(self.ventana)
 			self.pelota.movimiento(self.ventana,self.paleta)
-			
-			print(self.pelota.punto)
+			self.pelota.movimiento(self.ventana,self.paleta)
 			
 			#Dibujado
 			self.dibujar_todo()
