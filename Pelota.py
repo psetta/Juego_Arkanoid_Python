@@ -4,13 +4,12 @@ import math
 from Punto import *
 
 class Pelota:
-	_velocidad_total = 20
-	velocidad_max_x = _velocidad_total-1
-	velocidad = Punto(0,-_velocidad_total)
-	pegada = True
-	
 	#self, int, int, int
-	def __init__(self,x,y,radio):
+	def __init__(self,x,y,radio,vel_total):
+		self.velocidad_total = vel_total
+		self.velocidad_max_x = self.velocidad_total-1
+		self.velocidad = Punto(0,-self.velocidad_total)
+		self.pegada = True
 		self.punto = Punto(x,y)
 		self.radio = radio
 		self.diametro = self.radio*2
@@ -100,9 +99,9 @@ class Pelota:
 		
 	#self => None
 	def change_vel_y(self):
-		self.velocidad.y = -(self._velocidad_total * (math.sin(
+		self.velocidad.y = -(self.velocidad_total * (math.sin(
 			math.radians(90 - math.degrees(
-				math.asin(self.velocidad.x/float(self._velocidad_total)))
+				math.asin(self.velocidad.x/float(self.velocidad_total)))
 			))))
 			
 	#self, Ventana => Boolean
