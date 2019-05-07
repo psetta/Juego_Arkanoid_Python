@@ -7,23 +7,34 @@ from Status import *
 from Pelota import *
 from Paleta import *
 from Bloque import *
+#from Fase import *
 
-
-_relacion_ventana = 1.1
+#CONSTANTES
+	#ventana
+_relacion_medidas_juego = 1.1 #altura = ancho*1.1
 _ancho_ventana = 600
 _min_ancho_ventana = 500
+_alto_ventana = 600
+_min_alto_ventana = 550
+	#fase
 _marco = 10
+	#status
+_relacion_altura_fase_score = 0.1
+	#paleta
 _ancho_paleta = 60
 _alto_paleta = 16
 _velocidad_paleta = 5
+	#pelota
 _velocidad_pelota = 5
 _radio_pelota = 6
+	#bloque
 _ancho_bloque = 20
 _alto_bloque = 10
+	#fps
 _fps = 60
 
-_min_alto_ventana = int(_min_ancho_ventana*_relacion_ventana)
-_alto_ventana = int(_ancho_ventana*_relacion_ventana)
+
+
 	
 	
 class Game:
@@ -34,10 +45,12 @@ class Game:
 		self.fps = _fps
 		
 		self.ventana = Ventana(_ancho_ventana,
-							   _alto_ventana,_marco)	
+							   _alto_ventana,
+							   _relacion_medidas_juego,
+							   _relacion_altura_fase_score)	
 										   
-		self.paleta = Paleta(int(self.ventana.ancho/2-_ancho_paleta/2),
-							 int(self.ventana.alto-_alto_paleta*2),
+		self.paleta = Paleta(int(self.ventana.rect[0]/2-_ancho_paleta/2),
+							 int(self.ventana.rect[1]-_alto_paleta*2),
 							 _ancho_paleta,
 							 _alto_paleta,
 							 _velocidad_paleta)			
@@ -47,14 +60,13 @@ class Game:
 							 _radio_pelota,
 							 _velocidad_pelota)
 							
-		self.status = Status(self.ventana.ancho_juego/4,
-							 self.ventana.score_alto/2.2,
-							 self.ventana.marco)
+		self.status = Status(self.ventana.rect_status)
 		
 	#self => None
 	def dibujar_todo(self):
-		self.ventana.dibujar_fondo_juego()
-		self.ventana.dibujar_marco()
+		#self.ventana.dibujar_fondo_juego()
+		#self.ventana.dibujar_marco()
+		self.ventana.dibujar_todo()
 		self.paleta.dibujar(self.ventana)
 		self.pelota.dibujar(self.ventana)
 		self.pelota.dibujar_sombras(self.ventana)
@@ -74,38 +86,22 @@ class Game:
 					(self.ventana.marco + self.paleta.ancho))
 			else:
 				self.paleta.punto.x += self.paleta.velocidad
-			
+	
+	#self => None
+	def quit(self):
+		pygame.display.quit()
+		self.status.pygame_bucle = 0
+		exit()
+	
 	#self => None
 	def eventos(self):
-		global _ancho_ventana
-		global _alto_ventana
 		for evento in pygame.event.get():
 			#EXIT
 			if evento.type == pygame.QUIT:
-				pygame.display.quit()
-				self.status.pygame_bucle = 0
-				exit()
+				self.quit()
 			#RESIZE
 			if evento.type == pygame.VIDEORESIZE:
-				if (evento.w >= _min_ancho_ventana and 
-				evento.h >= _min_alto_ventana):
-					diff_w = abs(_ancho_ventana-evento.w)
-					diff_h = abs(_alto_ventana-evento.h)
-					if diff_w >= diff_h:
-						_ancho_ventana = evento.w
-						_alto_ventana = int(_ancho_ventana*_relacion_ventana)
-					else:
-						_alto_ventana = evento.h
-						_ancho_ventana = int(_alto_ventana/_relacion_ventana)
-				else:
-					_ancho_ventana = _min_ancho_ventana
-					_alto_ventana = _min_alto_ventana
-				self.ventana = Ventana(evento.w,
-							   int(evento.w*_relacion_ventana),
-							   _marco)			
-				self.status = Status(self.ventana.ancho_juego/4,
-							  self.ventana.score_alto/2.2,
-							  self.ventana.marco)
+				None
 			#TECLA ESPACIO
 			if evento.type == pygame.KEYDOWN:
 				if evento.key == pygame.K_SPACE:

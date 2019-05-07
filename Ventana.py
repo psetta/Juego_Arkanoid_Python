@@ -2,127 +2,69 @@ import pygame
 from Punto import *
 
 class Ventana:
-	#self, int, int, int => None
-	def __init__(self,ancho,alto,marco):
-		self.ancho = ancho
-		self.alto = alto
-		self.marco = marco
-		self.score_alto = self.alto/10
-		self.ancho_juego = self.ancho-self.marco*2
-		self.alto_juego = self.alto-(self.score_alto+self.marco*2)
-		self.punto_i_juego = Punto(self.marco,
-								   self.score_alto+self.marco*2)
-		self.punto_f_juego = Punto(self.ancho-self.marco,
-								   self.alto)
-		self.pygame = pygame.display.set_mode([ancho,alto],pygame.RESIZABLE)
-		self.fondo_img = self.crear_fondo_juego()
-		self.marco_img = self.crear_marco() 
+	#self, int, int, float, float => None
+	def __init__(self,ancho,alto,relacion_mj,relacion_fs):
+		#medidas totales de la ventana
+		self.rect = [ancho,alto]
+		#relacion entre el ancho y la altura del juego
+		self.relacion_mj = relacion_mj
+		#relacion entre la altura del rectangulo de la fase y del status
+		self.relacion_fs = relacion_fs
+		#medidas del juego
+		self.rect_juego = [int(self.rect[0]/relacion_mj),
+							  self.rect[1]]
+		#medidas del rectangulo del status
+		self.rect_status = [self.rect_juego[0],
+						    self.rect_juego[1]*relacion_fs]
+		#medidas del rectangulo de la fase
+		self.rect_fase = [self.rect_juego[0],
+						  self.rect_juego[1]-self.rect_status[1]]
+		#espacio
+		self.espacio = [(self.rect[0]-self.rect_juego[0])/2,
+						(self.rect[1]-self.rect_juego[1])/2]
+		#pygame display
+		self.pygame = pygame.display.set_mode(
+					self.rect,
+					pygame.RESIZABLE)
+		#pygame rectangulo juego
+		self.pygame_rect_juego = pygame.Rect(
+				self.espacio[0],
+				self.espacio[1],
+				self.rect_juego[0],
+				self.rect_juego[1])
+		#pygame rectangulo fase
+		self.pygame_rect_fase = pygame.Rect(
+				self.espacio[0],
+				self.espacio[1]+self.rect_status[1],
+				self.rect_fase[0],
+				self.rect_fase[1])
+		#pygame rectangulo status
+		self.pygame_rect_status = pygame.Rect(
+				self.espacio[0],
+				self.espacio[1],
+				self.rect_status[0],
+				self.rect_status[1])
+				
+	def dibujar_todo(self):
+		self.dibujar_rect_fase()
+		self.dibujar_rect_status()
+		self.dibujar_rect_juego()
 		
 	#self => None
-	def dibujar_fondo_juego(self):
-		self.pygame.blit(self.fondo_img, 
-				(self.marco,self.marco*2+self.score_alto))
-					
-	#self => pygame.Surface				
-	def crear_fondo_juego(self):
-		fondo = pygame.Surface((
-						int(self.ancho_juego),
-						int(self.alto_juego)+1))
-				
-		#Fondo Degradado
-		num_rect = 50
-		color_value_1 = 100
-		color_value_2 = 140
-		nivel_degradado = 1
-		for y in range(0,self.alto,int(self.alto/num_rect)):
-			rect = pygame.Rect(
-						0,
-						y,
-						self.ancho_juego,
-						self.alto_juego-y)
-			color_value_1 = max(color_value_1 - nivel_degradado,60)
-			color_value_2 = max(color_value_2 - nivel_degradado,80)
-			color = [color_value_1,color_value_1,color_value_2]
-			pygame.draw.rect(fondo,color,rect)
-		
-		#Lineas
-		color = [60,60,80]
-		nlineas = 10
-		for i in range(nlineas):
-			pygame.draw.line(
-				fondo,
-				color,
-				(0,i*self.alto_juego/nlineas),
-				(self.ancho_juego-i*self.ancho_juego/nlineas,self.alto_juego))
-		for i in range(1,nlineas):
-			pygame.draw.line(
-				fondo,
-				color,
-				(i*self.ancho_juego/nlineas,0),
-				(self.ancho_juego,self.alto_juego-i*self.alto_juego/nlineas))
-		for i in range(nlineas):
-			pygame.draw.line(
-				fondo,
-				color,
-				(i*self.ancho_juego/nlineas,self.alto_juego),
-				(self.ancho_juego,i*self.alto_juego/nlineas))
-		for i in range(1,nlineas):
-			pygame.draw.line(
-				fondo,
-				color,
-				(0,self.alto_juego-i*self.alto_juego/nlineas),
-				(self.ancho_juego-i*self.ancho_juego/nlineas,0))
-				
-		#Alpha
-		rect_alpha = pygame.Surface(
-						(self.ancho_juego,self.alto_juego),
-						pygame.SRCALPHA, 32)
-		rect_alpha.fill((100, 100, 140, 160))
-		fondo.blit(rect_alpha, (0,0))
-		return fondo
+	def dibujar_rect_juego(self):
+		color = [220,220,220]
+		pygame.draw.rect(self.pygame,color,self.pygame_rect_juego,1)
 		
 	#self => None
-	def dibujar_marco(self):
-			self.pygame.blit(self.marco_img, 
-				(0,self.marco+self.score_alto))
+	def dibujar_rect_fase(self):
+		color = [180,220,180]
+		pygame.draw.rect(self.pygame,color,self.pygame_rect_fase)
 		
-	#self => pygame.Surface
-	def crear_marco(self):
-		rect_marco_izq = pygame.Rect(
-							0,
-							0,
-							self.marco,
-							self.alto)
-		rect_marco_der = pygame.Rect(
-							self.ancho-self.marco,
-							0,
-							self.ancho,
-							self.alto)
-		rect_marco_top = pygame.Rect(
-							0,
-							0,
-							self.ancho,
-							self.marco)
+	#self => None
+	def dibujar_rect_status(self):
+		color = [220,180,180]
+		pygame.draw.rect(self.pygame,color,self.pygame_rect_status)
 		
-		marco_img = pygame.Surface(
-						(self.ancho,self.alto-self.score_alto),
-						pygame.SRCALPHA, 32)
-		color = [120,120,120]
-		pygame.draw.rect(marco_img,color,rect_marco_izq)
-		pygame.draw.rect(marco_img,color,rect_marco_der)
-		pygame.draw.rect(marco_img,color,rect_marco_top)
-		color = [140,140,140]
-		pygame.draw.line(marco_img,
-						color,
-						(self.marco,self.marco),
-						(self.marco,self.alto-self.score_alto))
-		pygame.draw.line(marco_img,
-						color,
-						(self.ancho-self.marco,self.marco),
-						(self.ancho-self.marco,self.alto-self.score_alto))
-		pygame.draw.line(marco_img,
-						color,
-						(self.marco,self.marco),
-						(self.ancho-self.marco,self.marco))
-		return marco_img
+	def resize(self):
+		None
 		
